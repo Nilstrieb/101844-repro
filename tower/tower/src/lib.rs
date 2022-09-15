@@ -8,8 +8,6 @@ pub mod discover;
 
 pub mod make;
 
-pub mod builder;
-pub mod layer;
 
 #[allow(unreachable_pub)]
 mod sealed {
