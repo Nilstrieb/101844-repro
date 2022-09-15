@@ -1,4 +1,3 @@
-use crate::load::Load;
 use crate::MakeService;
 use crate::Service;
 use crate::{Change, Discover};
@@ -31,8 +30,7 @@ where
     D: Discover + Unpin,
     D::Key: Hash + Clone,
     D::Error: Into<crate::BoxError>,
-    D::Service: Service<Req> + Load,
-    <D::Service as Load>::Metric: std::fmt::Debug,
+    D::Service: Service<Req>,
     <D::Service as Service<Req>>::Error: Into<crate::BoxError>,
 {
     type Response = <D::Service as Service<Req>>::Response;
@@ -54,7 +52,7 @@ impl<MS, Target, Request> Stream for PoolDiscoverer<MS, Target, Request>
 where
     MS: MakeService<Target, Request>,
 {
-    type Item = Result<Change<usize, DropNotifyService<MS::Service>>, MS::MakeError>;
+    type Item = Result<Change<usize, DropNotifyService<MS::Service>>, MS::Error>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         todo!()
@@ -67,9 +65,6 @@ impl Builder {
     pub fn build<MS, Target, Request>() -> ()
     where
         MS: MakeService<Target, Request>,
-        MS::Service: Load,
-        <MS::Service as Load>::Metric: std::fmt::Debug,
-        MS::MakeError: Into<crate::BoxError>,
         MS::Error: Into<crate::BoxError>,
     {
         let d: PoolDiscoverer<MS, Target, Request> = todo!();
@@ -90,11 +85,7 @@ type PinBalance<S, Request> = Balance<Pin<Box<S>>, Request>;
 impl<MS, Target, Req> Service<Req> for Pool<MS, Target, Req>
 where
     MS: MakeService<Target, Req>,
-    MS::Service: Load,
-    <MS::Service as Load>::Metric: std::fmt::Debug,
-    MS::MakeError: Into<crate::BoxError>,
     MS::Error: Into<crate::BoxError>,
-    Target: Clone,
 {
     type Response = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Response;
     type Error = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Error;
@@ -103,14 +94,6 @@ where
 
 pub struct DropNotifyService<Svc> {
     svc: Svc,
-}
-
-
-impl<Svc: Load> Load for DropNotifyService<Svc> {
-    type Metric = Svc::Metric;
-    fn load(&self) -> Self::Metric {
-        todo!()
-    }
 }
 
 impl<Request, Svc: Service<Request>> Service<Request> for DropNotifyService<Svc> {
