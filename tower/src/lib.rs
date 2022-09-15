@@ -1,39 +1,25 @@
-use std::marker::PhantomData;
-use std::pin::Pin;
-
-use core::ops::DerefMut;
-
 trait Stream {
     type Item;
 }
 
-impl<P> Stream for Pin<P>
-where
-    P: DerefMut,
-    P::Target: Stream,
-{
-    type Item = <P::Target as Stream>::Item;
-}
-
 trait TryStream: Stream {
-    type Ok;
+    type TryItem;
 }
 
 impl<S, T> TryStream for S
 where
     S: ?Sized + Stream<Item = T>,
 {
-    type Ok = T;
+    type TryItem = T;
 }
 
 trait Discover {
     type Service;
 }
 
-impl<K, S, D: ?Sized> Discover for D
+impl<S, D: ?Sized> Discover for D
 where
-    D: TryStream<Ok = (K, S)>,
-    K: Eq,
+    D: TryStream<TryItem = S>,
 {
     type Service = S;
 }
@@ -48,7 +34,7 @@ pub trait MakeService {
 }
 
 struct Balance<D, Req> {
-    _req: PhantomData<(D, Req)>,
+    _dreq: (D, Req),
 }
 
 impl<D, Req> Balance<D, Req>
@@ -66,33 +52,22 @@ impl<D, Req> Service<Req> for Balance<D, Req> {
     type Error = ();
 }
 
-struct PoolDiscoverer<MS>
+impl<MS> Stream for MS
 where
     MS: MakeService,
 {
-    _x: MS,
+    type Item = SvcWrap<MS::Service>;
 }
 
-impl<MS> Stream for PoolDiscoverer<MS>
+pub fn broken<MS>()
 where
     MS: MakeService,
+    MS::Error: Into<()>,
 {
-    type Item = (usize, SvcWrap<MS::Service>);
-}
+    let d: MS = todo!();
 
-pub struct Builder;
-
-impl Builder {
-    pub fn build<MS, Request>()
-    where
-        MS: MakeService,
-        MS::Error: Into<()>,
-    {
-        let d: PoolDiscoverer<MS> = todo!();
-
-        // THE CRITICAL STATEMENT
-        let _ = Balance::new(Box::pin(d));
-    }
+    // Error: Apparently Balance::new doesn't exist during MIR validation
+    let _ = Balance::new(d);
 }
 
 struct SvcWrap<Svc>(Svc);
