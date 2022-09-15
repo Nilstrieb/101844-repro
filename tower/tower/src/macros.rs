@@ -13,13 +13,7 @@ macro_rules! opaque_future {
                 }
             }
         }
-
-        impl<$($param),+> std::fmt::Debug for $name<$($param),+> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                f.debug_tuple(stringify!($name)).field(&format_args!("...")).finish()
-            }
-        }
-
+        
         impl<$($param),+> std::future::Future for $name<$($param),+>
         where
             $actual: std::future::Future,
