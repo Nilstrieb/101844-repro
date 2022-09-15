@@ -8,7 +8,7 @@ trait TryStream: Stream {
 
 impl<S, T> TryStream for S
 where
-    S: ?Sized + Stream<Item = T>,
+    S: Stream<Item = T>,
 {
     type TryItem = T;
 }
@@ -56,22 +56,14 @@ impl<MS> Stream for MS
 where
     MS: MakeService,
 {
-    type Item = SvcWrap<MS::Service>;
+    type Item = MS::Service;
 }
 
-pub fn broken<MS>()
+pub fn broken<MS>(ms: MS)
 where
     MS: MakeService,
     MS::Error: Into<()>,
 {
-    let d: MS = todo!();
-
     // Error: Apparently Balance::new doesn't exist during MIR validation
-    let _ = Balance::new(d);
-}
-
-struct SvcWrap<Svc>(Svc);
-
-impl<Request, Svc: Service<Request>> Service<Request> for SvcWrap<Svc> {
-    type Error = Svc::Error;
+    let _ = Balance::<MS, ()>::new(ms);
 }
