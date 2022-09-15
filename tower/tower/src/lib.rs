@@ -1,7 +1,6 @@
 // #![allow(warnings)]
 
 pub mod balance;
-pub mod discover;
 pub mod make;
 
 pub trait Sealed<T> {}
@@ -19,6 +18,33 @@ mod load {
 use std::future::Future;
 use std::task::Poll;
 
+use futures_core::TryStream;
+
+pub trait Discover {
+    type Key: Eq;
+    type Service;
+    type Error;
+}
+
+impl<K, S, E, D: ?Sized> Sealed<Change<(), ()>> for D
+where
+    D: TryStream<Ok = Change<K, S>, Error = E>,
+    K: Eq,
+{
+}
+
+impl<K, S, E, D: ?Sized> Discover for D
+where
+    D: TryStream<Ok = Change<K, S>, Error = E>,
+    K: Eq,
+{
+    type Key = K;
+    type Service = S;
+    type Error = E;
+}
+
+pub struct Change<K, V>(K, V);
+
 pub trait Service<Request> {
     /// Responses given by the service.
     type Response;
@@ -30,6 +56,4 @@ pub trait Service<Request> {
     type Future: Future<Output = Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>>;
-
-    fn call(&mut self, req: Request) -> Self::Future;
 }

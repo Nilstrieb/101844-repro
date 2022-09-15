@@ -1,7 +1,7 @@
-use crate::discover::{Change, Discover};
 use crate::load::Load;
 use crate::make::MakeService;
 use crate::Service;
+use crate::{Change, Discover};
 use futures_core::Stream;
 use futures_util::future::{self};
 use std::hash::Hash;
@@ -21,7 +21,7 @@ where
     D::Service: Service<Req>,
     <D::Service as Service<Req>>::Error: Into<crate::BoxError>,
 {
-    pub fn new(discover: D) -> Self {
+    pub fn new(_: D) -> Self {
         todo!()
     }
 }
@@ -45,10 +45,6 @@ where
     fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
         todo!()
     }
-
-    fn call(&mut self, request: Req) -> Self::Future {
-        todo!()
-    }
 }
 
 pub struct PoolDiscoverer<MS, Target, Request>
@@ -62,7 +58,7 @@ impl<MS, Target, Request> Stream for PoolDiscoverer<MS, Target, Request>
 where
     MS: MakeService<Target, Request>,
 {
-    type Item = Result<(Change<usize, DropNotifyService<MS::Service>>), MS::MakeError>;
+    type Item = Result<Change<usize, DropNotifyService<MS::Service>>, MS::MakeError>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         todo!()
@@ -110,10 +106,6 @@ where
     fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
         todo!()
     }
-
-    fn call(&mut self, req: Req) -> Self::Future {
-        todo!()
-    }
 }
 
 pub struct DropNotifyService<Svc> {
@@ -139,10 +131,6 @@ impl<Request, Svc: Service<Request>> Service<Request> for DropNotifyService<Svc>
     type Error = Svc::Error;
 
     fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
-        todo!()
-    }
-
-    fn call(&mut self, req: Request) -> Self::Future {
         todo!()
     }
 }

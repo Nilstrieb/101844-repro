@@ -2,7 +2,7 @@
 
 use crate::Sealed;
 use crate::Service;
-use std::task::{Context, Poll};
+use std::task::Poll;
 
 use std::convert::Infallible;
 
@@ -19,10 +19,6 @@ where
     type Future = SharedFuture<S>;
 
     fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
-        todo!()
-    }
-
-    fn call(&mut self, _target: T) -> Self::Future {
         todo!()
     }
 }
@@ -52,8 +48,6 @@ pub trait MakeService<Target, Request> {
     type Service: Service<Request, Response = Self::Response, Error = Self::Error>;
     type MakeError;
     type Future;
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::MakeError>>;
-    fn make_service(&mut self, target: Target) -> Self::Future;
 }
 
 impl<M, S, Target, Request> Sealed<(Target, Request)> for M
@@ -73,12 +67,4 @@ where
     type Service = S;
     type MakeError = M::Error;
     type Future = M::Future;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::MakeError>> {
-        Service::poll_ready(self)
-    }
-
-    fn make_service(&mut self, target: Target) -> Self::Future {
-        Service::call(self, target)
-    }
 }
