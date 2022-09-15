@@ -1,6 +1,6 @@
 //! Trait aliases for Services that produce specific types of Responses.
 
-use crate::sealed::Sealed;
+use crate::Sealed;
 use crate::Service;
 use std::task::{Context, Poll};
 
@@ -27,9 +27,23 @@ where
     }
 }
 
-opaque_future! {
-    /// Response future from [`Shared`] services.
-    pub type SharedFuture<S> = futures_util::future::Ready<Result<S, Infallible>>;
+pub struct SharedFuture<S> {
+    _s: S,
+}
+
+impl<S> std::future::Future for SharedFuture<S>
+where
+    futures_util::future::Ready<Result<S, Infallible>>: std::future::Future,
+{
+    type Output =
+        <futures_util::future::Ready<Result<S, Infallible>> as std::future::Future>::Output;
+
+    fn poll(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        todo!()
+    }
 }
 
 pub trait MakeService<Target, Request> {

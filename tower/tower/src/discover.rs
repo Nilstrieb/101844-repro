@@ -1,4 +1,4 @@
-use crate::sealed::Sealed;
+use crate::Sealed;
 use futures_core::TryStream;
 use std::{
     pin::Pin,
