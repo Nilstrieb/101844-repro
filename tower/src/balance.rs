@@ -74,6 +74,7 @@ impl Builder {
     {
         let d: PoolDiscoverer<MS, Target, Request> = todo!();
 
+        // THE CRITICAL STATEMENT
         let x = Balance::new(Box::pin(d));
 
         todo!()
@@ -116,5 +117,4 @@ impl<Request, Svc: Service<Request>> Service<Request> for DropNotifyService<Svc>
     type Response = Svc::Response;
     type Future = Svc::Future;
     type Error = Svc::Error;
-
 }

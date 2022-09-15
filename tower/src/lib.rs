@@ -40,14 +40,9 @@ where
 pub struct Change<K, V>(K, V);
 
 pub trait Service<Request> {
-    /// Responses given by the service.
     type Response;
-
-    /// Errors produced by the service.
     type Error;
-
-    /// The future response value.
-    type Future: Future<Output = Result<Self::Response, Self::Error>>;
+    type Future;
 }
 
 pub trait MakeService<Target, Request> {
