@@ -1,10 +1,10 @@
-trait SecondTrait {
-    type Item2;
-}
-
 pub trait FirstTrait {
     type Item;
     type Extra: Extra<(), Error = Self::Item>;
+}
+
+trait SecondTrait {
+    type Item2;
 }
 
 trait ThirdTrait: SecondTrait {
