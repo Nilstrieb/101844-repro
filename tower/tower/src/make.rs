@@ -18,7 +18,7 @@ where
     type Error = Infallible;
     type Future = SharedFuture<S>;
 
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
         todo!()
     }
 
@@ -40,7 +40,7 @@ where
 
     fn poll(
         self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
+        _: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Self::Output> {
         todo!()
     }
@@ -75,7 +75,7 @@ where
     type Future = M::Future;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::MakeError>> {
-        Service::poll_ready(self, cx)
+        Service::poll_ready(self)
     }
 
     fn make_service(&mut self, target: Target) -> Self::Future {

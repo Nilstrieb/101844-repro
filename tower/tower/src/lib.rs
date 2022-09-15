@@ -17,7 +17,7 @@ mod load {
 }
 
 use std::future::Future;
-use std::task::{Context, Poll};
+use std::task::Poll;
 
 pub trait Service<Request> {
     /// Responses given by the service.
@@ -29,7 +29,7 @@ pub trait Service<Request> {
     /// The future response value.
     type Future: Future<Output = Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;
+    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>>;
 
     fn call(&mut self, req: Request) -> Self::Future;
 }

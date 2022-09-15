@@ -42,7 +42,7 @@ where
         fn(<D::Service as Service<Req>>::Error) -> crate::BoxError,
     >;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
         todo!()
     }
 
@@ -107,7 +107,7 @@ where
     type Error = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Error;
     type Future = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Future;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
         todo!()
     }
 
@@ -118,8 +118,6 @@ where
 
 pub struct DropNotifyService<Svc> {
     svc: Svc,
-    id: usize,
-    notify: tokio::sync::mpsc::UnboundedSender<usize>,
 }
 
 impl<Svc> Drop for DropNotifyService<Svc> {
@@ -140,7 +138,7 @@ impl<Request, Svc: Service<Request>> Service<Request> for DropNotifyService<Svc>
     type Future = Svc::Future;
     type Error = Svc::Error;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
         todo!()
     }
 
