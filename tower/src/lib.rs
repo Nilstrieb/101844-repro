@@ -1,17 +1,10 @@
 use std::marker::PhantomData;
-use std::{
-    pin::Pin,
-    task::{Context, Poll},
-};
+use std::pin::Pin;
 
 use core::ops::DerefMut;
 
 pub trait Stream {
     type Item;
-}
-
-impl<S: ?Sized + Stream + Unpin> Stream for &mut S {
-    type Item = S::Item;
 }
 
 impl<P> Stream for Pin<P>
@@ -24,18 +17,16 @@ where
 
 pub trait TryStream: Stream {
     type Ok;
-    type Error;
 }
 
-impl<S, T, E> TryStream for S
+impl<S, T> TryStream for S
 where
-    S: ?Sized + Stream<Item = Result<T, E>>,
+    S: ?Sized + Stream<Item = T>,
 {
     type Ok = T;
-    type Error = E;
 }
 
-pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
+pub type BoxError = ();
 
 pub trait Discover {
     type Key;
@@ -43,14 +34,14 @@ pub trait Discover {
     type Error;
 }
 
-impl<K, S, E, D: ?Sized> Discover for D
+impl<K, S, D: ?Sized> Discover for D
 where
-    D: TryStream<Ok = (K, S), Error = E>,
+    D: TryStream<Ok = (K, S)>,
     K: Eq,
 {
     type Key = K;
     type Service = S;
-    type Error = E;
+    type Error = ();
 }
 
 pub trait Service<Request> {
@@ -96,13 +87,13 @@ impl<MS, Target, Request> Stream for PoolDiscoverer<MS, Target, Request>
 where
     MS: MakeService<Target, Request>,
 {
-    type Item = Result<(usize, DropNotifyService<MS::Service>), MS::Error>;
+    type Item = (usize, DropNotifyService<MS::Service>);
 }
 
 pub struct Builder {}
 
 impl Builder {
-    pub fn build<MS, Target, Request>() -> ()
+    pub fn build<MS, Target, Request>()
     where
         MS: MakeService<Target, Request>,
         MS::Error: Into<crate::BoxError>,
@@ -110,9 +101,7 @@ impl Builder {
         let d: PoolDiscoverer<MS, Target, Request> = todo!();
 
         // THE CRITICAL STATEMENT
-        let x = Balance::new(Box::pin(d));
-
-        todo!()
+        let _ =  Balance::new(Box::pin(d));
     }
 }
 
@@ -120,16 +109,14 @@ pub struct Pool<MS, Target, Request> {
     balance: (MS, Target, Request),
 }
 
-type PinBalance<S, Request> = Balance<Pin<Box<S>>, Request>;
-
 impl<MS, Target, Req> Service<Req> for Pool<MS, Target, Req>
 where
     MS: MakeService<Target, Req>,
     MS::Error: Into<crate::BoxError>,
     Target: Clone,
 {
-    type Error = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Error;
-    type Future = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Future;
+    type Error = <Balance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Error;
+    type Future = <Balance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Future;
 }
 
 pub struct DropNotifyService<Svc> {
