@@ -66,9 +66,6 @@ timeout = ["pin-project-lite", "tokio/time"]
 util = ["__common", "futures-util", "pin-project"]
 
 [dependencies]
-tower-layer = { version = "0.3.1", path = "../tower-layer" }
-tower-service = { version = "0.3.1", path = "../tower-service" }
-
 futures-core = { version = "0.3", optional = true }
 futures-util = { version = "0.3", default-features = false, features = ["alloc"], optional = true }
 hdrhistogram = { version = "7.0", optional = true, default-features = false }

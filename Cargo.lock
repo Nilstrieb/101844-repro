@@ -162,18 +162,8 @@ dependencies = [
  "rand",
  "slab",
  "tokio",
- "tower-layer",
- "tower-service",
  "tracing",
 ]
-
-[[package]]
-name = "tower-layer"
-version = "0.3.1"
-
-[[package]]
-name = "tower-service"
-version = "0.3.2"
 
 [[package]]
 name = "tracing"

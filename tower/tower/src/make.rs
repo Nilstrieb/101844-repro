@@ -17,12 +17,12 @@ mod make_service {
     use std::future::Future;
     use std::marker::PhantomData;
     use std::task::{Context, Poll};
-    use tower_service::Service;
+        use crate::Service;
 
     pub mod shared {
         use std::convert::Infallible;
         use std::task::{Context, Poll};
-        use tower_service::Service;
+        use crate::Service;
 
         pub struct Shared<S> {
             service: S,

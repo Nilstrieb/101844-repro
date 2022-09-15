@@ -2,7 +2,4 @@
 
 members = [
   "tower",
-  "tower-layer",
-  "tower-service",
-  "tower-test",
 ]

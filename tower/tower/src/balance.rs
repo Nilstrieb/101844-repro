@@ -16,7 +16,7 @@ use std::{
     task::{Context, Poll},
 };
 use tokio::sync::oneshot;
-use tower_service::Service;
+use crate::Service;
 use tracing::{debug, trace};
 
 pub struct Balance<D, Req> {
