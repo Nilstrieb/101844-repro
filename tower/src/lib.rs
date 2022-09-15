@@ -3,6 +3,8 @@
 pub mod balance;
 pub mod make;
 
+use std::future::Future;
+use futures_core::TryStream;
 pub trait Sealed<T> {}
 
 /// Alias for a type-erased error type.
@@ -14,11 +16,6 @@ mod load {
         fn load(&self) -> Self::Metric;
     }
 }
-
-use std::future::Future;
-use std::task::Poll;
-
-use futures_core::TryStream;
 
 pub trait Discover {
     type Key: Eq;
@@ -54,6 +51,4 @@ pub trait Service<Request> {
 
     /// The future response value.
     type Future: Future<Output = Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>>;
 }

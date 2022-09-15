@@ -41,10 +41,6 @@ where
         <D::Service as Service<Req>>::Future,
         fn(<D::Service as Service<Req>>::Error) -> crate::BoxError,
     >;
-
-    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
-        todo!()
-    }
 }
 
 pub struct PoolDiscoverer<MS, Target, Request>
@@ -102,21 +98,12 @@ where
     type Response = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Response;
     type Error = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Error;
     type Future = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Future;
-
-    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
-        todo!()
-    }
 }
 
 pub struct DropNotifyService<Svc> {
     svc: Svc,
 }
 
-impl<Svc> Drop for DropNotifyService<Svc> {
-    fn drop(&mut self) {
-        todo!()
-    }
-}
 
 impl<Svc: Load> Load for DropNotifyService<Svc> {
     type Metric = Svc::Metric;
@@ -130,7 +117,4 @@ impl<Request, Svc: Service<Request>> Service<Request> for DropNotifyService<Svc>
     type Future = Svc::Future;
     type Error = Svc::Error;
 
-    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
-        todo!()
-    }
 }

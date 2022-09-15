@@ -2,7 +2,6 @@
 
 use crate::Sealed;
 use crate::Service;
-use std::task::Poll;
 
 use std::convert::Infallible;
 
@@ -17,10 +16,6 @@ where
     type Response = S;
     type Error = Infallible;
     type Future = SharedFuture<S>;
-
-    fn poll_ready(&mut self) -> Poll<Result<(), Self::Error>> {
-        todo!()
-    }
 }
 
 pub struct SharedFuture<S> {
@@ -29,10 +24,10 @@ pub struct SharedFuture<S> {
 
 impl<S> std::future::Future for SharedFuture<S>
 where
-    futures_util::future::Ready<Result<S, Infallible>>: std::future::Future,
+    std::future::Ready<Result<S, Infallible>>: std::future::Future,
 {
     type Output =
-        <futures_util::future::Ready<Result<S, Infallible>> as std::future::Future>::Output;
+        <std::future::Ready<Result<S, Infallible>> as std::future::Future>::Output;
 
     fn poll(
         self: std::pin::Pin<&mut Self>,
