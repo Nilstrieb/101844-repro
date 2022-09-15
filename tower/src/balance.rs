@@ -1,6 +1,6 @@
 use crate::MakeService;
 use crate::Service;
-use crate::{Change, Discover};
+use crate::{Discover};
 use futures_core::Stream;
 use futures_util::future::{self};
 use std::hash::Hash;
@@ -52,7 +52,7 @@ impl<MS, Target, Request> Stream for PoolDiscoverer<MS, Target, Request>
 where
     MS: MakeService<Target, Request>,
 {
-    type Item = Result<Change<usize, DropNotifyService<MS::Service>>, MS::Error>;
+    type Item = Result<(usize, DropNotifyService<MS::Service>), MS::Error>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         todo!()
@@ -86,6 +86,7 @@ impl<MS, Target, Req> Service<Req> for Pool<MS, Target, Req>
 where
     MS: MakeService<Target, Req>,
     MS::Error: Into<crate::BoxError>,
+    Target: Clone,
 {
     type Response = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Response;
     type Error = <PinBalance<PoolDiscoverer<MS, Target, Req>, Req> as Service<Req>>::Error;
