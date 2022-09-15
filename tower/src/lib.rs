@@ -1,9 +1,7 @@
-// #![allow(warnings)]
-
 pub mod balance;
 
 use futures_core::TryStream;
-use std::{convert::Infallible, future::Future};
+use std::future::Future;
 pub trait Sealed<T> {}
 
 /// Alias for a type-erased error type.
@@ -17,7 +15,7 @@ mod load {
 }
 
 pub trait Discover {
-    type Key: Eq;
+    type Key;
     type Service;
     type Error;
 }
@@ -50,37 +48,6 @@ pub trait Service<Request> {
 
     /// The future response value.
     type Future: Future<Output = Result<Self::Response, Self::Error>>;
-}
-
-pub struct Shared<S> {
-    service: S,
-}
-
-impl<S, T> Service<T> for Shared<S>
-where
-    S: Clone,
-{
-    type Response = S;
-    type Error = Infallible;
-    type Future = SharedFuture<S>;
-}
-
-pub struct SharedFuture<S> {
-    _s: S,
-}
-
-impl<S> std::future::Future for SharedFuture<S>
-where
-    std::future::Ready<Result<S, Infallible>>: std::future::Future,
-{
-    type Output = <std::future::Ready<Result<S, Infallible>> as std::future::Future>::Output;
-
-    fn poll(
-        self: std::pin::Pin<&mut Self>,
-        _: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Self::Output> {
-        todo!()
-    }
 }
 
 pub trait MakeService<Target, Request> {
