@@ -3,7 +3,7 @@ use std::pin::Pin;
 
 use core::ops::DerefMut;
 
-pub trait Stream {
+trait Stream {
     type Item;
 }
 
@@ -15,7 +15,7 @@ where
     type Item = <P::Target as Stream>::Item;
 }
 
-pub trait TryStream: Stream {
+trait TryStream: Stream {
     type Ok;
 }
 
@@ -26,9 +26,7 @@ where
     type Ok = T;
 }
 
-pub type BoxError = ();
-
-pub trait Discover {
+trait Discover {
     type Service;
 }
 
@@ -42,17 +40,14 @@ where
 
 pub trait Service<Request> {
     type Error;
-    type Future;
 }
 
 pub trait MakeService {
-    type Response;
     type Error;
     type Service: Service<(), Error = Self::Error>;
-    type Future;
 }
 
-pub struct Balance<D, Req> {
+struct Balance<D, Req> {
     _req: PhantomData<(D, Req)>,
 }
 
@@ -60,65 +55,48 @@ impl<D, Req> Balance<D, Req>
 where
     D: Discover,
     D::Service: Service<Req>,
-    <D::Service as Service<Req>>::Error: Into<crate::BoxError>,
+    <D::Service as Service<Req>>::Error: Into<()>,
 {
-    pub fn new(_: D) -> Self {
+    fn new(_: D) -> Self {
         todo!()
     }
 }
 
 impl<D, Req> Service<Req> for Balance<D, Req> {
-    type Error = crate::BoxError;
-    type Future = std::future::Ready<()>;
+    type Error = ();
 }
 
-pub struct PoolDiscoverer<MS, Request>
+struct PoolDiscoverer<MS>
 where
     MS: MakeService,
 {
-    _p: PhantomData<(MS, Request)>,
+    _x: MS,
 }
 
-impl<MS, Request> Stream for PoolDiscoverer<MS, Request>
+impl<MS> Stream for PoolDiscoverer<MS>
 where
     MS: MakeService,
 {
     type Item = (usize, SvcWrap<MS::Service>);
 }
 
-pub struct Builder {}
+pub struct Builder;
 
 impl Builder {
     pub fn build<MS, Request>()
     where
         MS: MakeService,
-        MS::Error: Into<crate::BoxError>,
+        MS::Error: Into<()>,
     {
-        let d: PoolDiscoverer<MS, Request> = todo!();
+        let d: PoolDiscoverer<MS> = todo!();
 
         // THE CRITICAL STATEMENT
         let _ = Balance::new(Box::pin(d));
     }
 }
 
-pub struct Pool<MS, Request> {
-    balance: (MS, Request),
-}
-
-impl<MS, Req> Service<Req> for Pool<MS, Req>
-where
-    MS: MakeService,
-    MS::Error: Into<crate::BoxError>,
-{
-    type Error = <Balance<PoolDiscoverer<MS, Req>, Req> as Service<Req>>::Error;
-    type Future = <Balance<PoolDiscoverer<MS, Req>, Req> as Service<Req>>::Future;
-}
-
-pub struct SvcWrap<Svc> {
-    svc: Svc,
-}
+struct SvcWrap<Svc>(Svc);
 
 impl<Request, Svc: Service<Request>> Service<Request> for SvcWrap<Svc> {
-    type Future = Svc::Future;
     type Error = Svc::Error;
 }
