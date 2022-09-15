@@ -1,18 +1,10 @@
-#[cfg(any(
-    feature = "util",
-    feature = "spawn-ready",
-    feature = "filter",
-    feature = "make"
-))]
 macro_rules! opaque_future {
     ($(#[$m:meta])* pub type $name:ident<$($param:ident),+> = $actual:ty;) => {
-        pin_project_lite::pin_project! {
-            $(#[$m])*
-            pub struct $name<$($param),+> {
-                #[pin]
-                inner: $actual
-            }
+        $(#[$m])*
+        pub struct $name<$($param),+> {
+            inner: $actual
         }
+
 
         impl<$($param),+> $name<$($param),+> {
             pub(crate) fn new(inner: $actual) -> Self {
@@ -35,7 +27,7 @@ macro_rules! opaque_future {
             type Output = <$actual as std::future::Future>::Output;
             #[inline]
             fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-                self.project().inner.poll(cx)
+                todo!()
             }
         }
     }

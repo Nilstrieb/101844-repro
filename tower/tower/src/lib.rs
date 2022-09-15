@@ -1,4 +1,4 @@
-#![allow(warnings)]
+// #![allow(warnings)]
 
 #[macro_use]
 pub(crate) mod macros;

@@ -1,23 +1,15 @@
 use crate::discover::{Change, Discover};
 use crate::load::Load;
 use crate::make::MakeService;
-use futures_core::ready;
+use crate::Service;
 use futures_core::Stream;
-use futures_util::future::{self, TryFutureExt};
-use pin_project_lite::pin_project;
-use rand::{rngs::SmallRng, Rng, SeedableRng};
-use slab::Slab;
+use futures_util::future::{self};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::{
-    fmt,
-    future::Future,
     pin::Pin,
     task::{Context, Poll},
 };
-use tokio::sync::oneshot;
-use crate::Service;
-use tracing::{debug, trace};
 
 pub struct Balance<D, Req> {
     _req: PhantomData<(D, Req)>,
