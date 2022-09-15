@@ -1,5 +1,5 @@
 use crate::load::Load;
-use crate::make::MakeService;
+use crate::MakeService;
 use crate::Service;
 use crate::{Change, Discover};
 use futures_core::Stream;
