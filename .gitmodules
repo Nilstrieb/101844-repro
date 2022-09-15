@@ -1,3 +1,0 @@
-[submodule "tower"]
-	path = tower
-	url = https://github.com/tower-rs/tower.git

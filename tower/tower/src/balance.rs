@@ -1,37 +1,64 @@
-//! This module defines a load-balanced pool of services that adds new services when load is high.
-//!
-//! The pool uses `poll_ready` as a signal indicating whether additional services should be spawned
-//! to handle the current level of load. Specifically, every time `poll_ready` on the inner service
-//! returns `Ready`, [`Pool`] consider that a 0, and every time it returns `Pending`, [`Pool`]
-//! considers it a 1. [`Pool`] then maintains an [exponential moving
-//! average](https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average) over those
-//! samples, which gives an estimate of how often the underlying service has been ready when it was
-//! needed "recently" (see [`Builder::urgency`]). If the service is loaded (see
-//! [`Builder::loaded_above`]), a new service is created and added to the underlying [`Balance`].
-//! If the service is underutilized (see [`Builder::underutilized_below`]) and there are two or
-//! more services, then the latest added service is removed. In either case, the load estimate is
-//! reset to its initial value (see [`Builder::initial`] to prevent services from being rapidly
-//! added or removed.
-#![deny(missing_docs)]
-
-use super::p2c::Balance;
-use crate::discover::Change;
+use crate::discover::{Change, Discover};
 use crate::load::Load;
 use crate::make::MakeService;
-use futures_core::{ready, Stream};
+use futures_core::ready;
+use futures_core::Stream;
+use futures_util::future::{self, TryFutureExt};
 use pin_project_lite::pin_project;
+use rand::{rngs::SmallRng, Rng, SeedableRng};
 use slab::Slab;
+use std::hash::Hash;
+use std::marker::PhantomData;
 use std::{
     fmt,
     future::Future,
-    marker::PhantomData,
     pin::Pin,
     task::{Context, Poll},
 };
+use tokio::sync::oneshot;
 use tower_service::Service;
+use tracing::{debug, trace};
 
-/// A wrapper around `MakeService` that discovers a new service when load is high, and removes a
-/// service when load is low. See [`Pool`].
+pub struct Balance<D, Req> {
+    _req: PhantomData<(D, Req)>,
+}
+
+impl<D, Req> Balance<D, Req>
+where
+    D: Discover,
+    D::Service: Service<Req>,
+    <D::Service as Service<Req>>::Error: Into<crate::BoxError>,
+{
+    pub fn new(discover: D) -> Self {
+        todo!()
+    }
+}
+
+impl<D, Req> Service<Req> for Balance<D, Req>
+where
+    D: Discover + Unpin,
+    D::Key: Hash + Clone,
+    D::Error: Into<crate::BoxError>,
+    D::Service: Service<Req> + Load,
+    <D::Service as Load>::Metric: std::fmt::Debug,
+    <D::Service as Service<Req>>::Error: Into<crate::BoxError>,
+{
+    type Response = <D::Service as Service<Req>>::Response;
+    type Error = crate::BoxError;
+    type Future = future::MapErr<
+        <D::Service as Service<Req>>::Future,
+        fn(<D::Service as Service<Req>>::Error) -> crate::BoxError,
+    >;
+
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        todo!()
+    }
+
+    fn call(&mut self, request: Req) -> Self::Future {
+        todo!()
+    }
+}
+
 pub struct PoolDiscoverer<MS, Target, Request>
 where
     MS: MakeService<Target, Request>,
@@ -50,16 +77,9 @@ where
     }
 }
 
-/// A [builder] that lets you configure how a [`Pool`] determines whether the underlying service is
-/// loaded or not. See the [module-level documentation](self) and the builder's methods for
-/// details.
-///
-///  [builder]: https://rust-lang-nursery.github.io/api-guidelines/type-safety.html#builders-enable-construction-of-complex-values-c-builder
-#[derive(Copy, Clone, Debug)]
 pub struct Builder {}
 
 impl Builder {
-    /// See [`Pool::new`].
     pub fn build<MS, Target, Request>() -> ()
     where
         MS: MakeService<Target, Request>,
@@ -76,9 +96,7 @@ impl Builder {
     }
 }
 
-/// A dynamically sized, load-balanced pool of `Service` instances.
 pub struct Pool<MS, Target, Request> {
-    // the Pin<Box<_>> here is needed since Balance requires the Service to be Unpin
     balance: (MS, Target, Request),
 }
 
@@ -106,8 +124,6 @@ where
     }
 }
 
-#[doc(hidden)]
-#[derive(Debug)]
 pub struct DropNotifyService<Svc> {
     svc: Svc,
     id: usize,

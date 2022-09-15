@@ -1,14 +1,13 @@
-mod error;
-mod list;
-
-pub use self::list::ServiceList;
-
 use crate::sealed::Sealed;
 use futures_core::TryStream;
 use std::{
     pin::Pin,
     task::{Context, Poll},
 };
+
+mod error {
+    pub enum Never {}
+}
 
 pub trait Discover {
     type Key: Eq;
