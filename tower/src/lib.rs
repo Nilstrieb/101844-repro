@@ -45,10 +45,10 @@ pub trait Service<Request> {
     type Future;
 }
 
-pub trait MakeService<Request> {
+pub trait MakeService {
     type Response;
     type Error;
-    type Service: Service<Request, Error = Self::Error>;
+    type Service: Service<(), Error = Self::Error>;
     type Future;
 }
 
@@ -74,14 +74,14 @@ impl<D, Req> Service<Req> for Balance<D, Req> {
 
 pub struct PoolDiscoverer<MS, Request>
 where
-    MS: MakeService<Request>,
+    MS: MakeService,
 {
     _p: PhantomData<(MS, Request)>,
 }
 
 impl<MS, Request> Stream for PoolDiscoverer<MS, Request>
 where
-    MS: MakeService<Request>,
+    MS: MakeService,
 {
     type Item = (usize, SvcWrap<MS::Service>);
 }
@@ -91,7 +91,7 @@ pub struct Builder {}
 impl Builder {
     pub fn build<MS, Request>()
     where
-        MS: MakeService<Request>,
+        MS: MakeService,
         MS::Error: Into<crate::BoxError>,
     {
         let d: PoolDiscoverer<MS, Request> = todo!();
@@ -107,7 +107,7 @@ pub struct Pool<MS, Request> {
 
 impl<MS, Req> Service<Req> for Pool<MS, Req>
 where
-    MS: MakeService<Req>,
+    MS: MakeService,
     MS::Error: Into<crate::BoxError>,
 {
     type Error = <Balance<PoolDiscoverer<MS, Req>, Req> as Service<Req>>::Error;
